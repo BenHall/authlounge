@@ -63,7 +63,8 @@ module Authlogic
         private
           def persist_by_params
             return false if !params_enabled?
-            self.unauthorized_record = search_for_record("find_by_single_access_token", params_credentials)
+            found_record = search_for_record("by_single_access_token", { :key => params_credentials })
+            self.unauthorized_record = found_record.empty? nil, found_record.first
             self.single_access = valid?
           end
           

@@ -17,14 +17,15 @@ module Authlogic
             include InstanceMethods
             
             if respond_to?(:after_password_set) && respond_to?(:after_password_verification)
-              after_password_set :reset_persistence_token
-              after_password_verification :reset_persistence_token!, :if => :reset_persistence_token?
+              after_password_set_callback :reset_persistence_token
+              after_password_verification_callback :reset_persistence_token!, :if => :reset_persistence_token?
             end
             
-            validates_presence_of :persistence_token
-            validates_uniqueness_of :persistence_token, :if => :persistence_token_changed?
+            validates_present :persistence_token
+            validates_with_method :persistence_token, :persistence_token_unique?
             
-            before_validation :reset_persistence_token, :if => :reset_persistence_token?
+            validate_callback :reset_persistence_token, :if => :reset_persistence_token?
+
           end
         end
         
@@ -45,6 +46,15 @@ module Authlogic
         
         # Instance level methods for the persistence token.
         module InstanceMethods
+
+          # Validate uniqueness of persistence_token
+          def persistence_token_unique?
+            if changed_attributes.include?(:persistence_token)
+              self.class.by_persistence_token(:key => @persistence_token).length == 0
+            else
+              true
+            end
+          end
           # Resets the persistence_token field to a random hex value.
           def reset_persistence_token
             self.persistence_token = Authlogic::Random.hex_token

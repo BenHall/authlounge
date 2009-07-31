@@ -34,7 +34,8 @@ module Authlogic
             if !persistence_token.nil?
               # Allow finding by persistence token, because when records are created the session is maintained in a before_save, when there is no id.
               # This is done for performance reasons and to save on queries.
-              record = record_id.nil? ? search_for_record("find_by_persistence_token", persistence_token) : search_for_record("find_by_#{klass.primary_key}", record_id)
+              record = record_id.nil? ? search_for_record("by_persistence_token", { :key => persistence_token }) : search_for_record("by_id", { :key => record_id })
+              record = record.empty? ? nil : record.first
               self.unauthorized_record = record if record && record.persistence_token == persistence_token
               valid?
             else
@@ -43,7 +44,7 @@ module Authlogic
           end
           
           def session_credentials
-            [controller.session[session_key], controller.session["#{session_key}_#{klass.primary_key}"]].compact
+            [controller.session[session_key], controller.session["#{session_key}_id"]].compact
           end
           
           def session_key
@@ -52,7 +53,7 @@ module Authlogic
           
           def update_session
             controller.session[session_key] = record && record.persistence_token
-            controller.session["#{session_key}_#{klass.primary_key}"] = record && record.send(record.class.primary_key)
+            controller.session["#{session_key}_id"] = record && record.send(:id)
           end
       end
     end

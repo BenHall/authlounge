@@ -5,9 +5,11 @@ module Authlogic
     module Password
       def self.included(klass)
         klass.class_eval do
+          puts "including password on #{klass}"
           extend Config
           add_acts_as_authentic_module(Callbacks)
           add_acts_as_authentic_module(Methods)
+          
         end
       end
       
@@ -18,7 +20,7 @@ module Authlogic
         # * <tt>Default:</tt> :crypted_password, :encrypted_password, :password_hash, or :pw_hash
         # * <tt>Accepts:</tt> Symbol
         def crypted_password_field(value = nil)
-          rw_config(:crypted_password_field, value, first_column_to_exist(nil, :crypted_password, :encrypted_password, :password_hash, :pw_hash))
+          rw_config(:crypted_password_field, value, first_property_to_exist(nil, :crypted_password, :encrypted_password, :password_hash, :pw_hash))
         end
         alias_method :crypted_password_field=, :crypted_password_field
         
@@ -27,7 +29,7 @@ module Authlogic
         # * <tt>Default:</tt> :password_salt, :pw_salt, :salt, nil if none exist
         # * <tt>Accepts:</tt> Symbol
         def password_salt_field(value = nil)
-          rw_config(:password_salt_field, value, first_column_to_exist(nil, :password_salt, :pw_salt, :salt))
+          rw_config(:password_salt_field, value, first_property_to_exist(nil, :password_salt, :pw_salt, :salt))
         end
         alias_method :password_salt_field=, :password_salt_field
         
@@ -174,7 +176,7 @@ module Authlogic
       module Callbacks
         METHODS = [
           "before_password_set", "after_password_set",
-          "before_password_verification", "after_password_verification"
+          "before_password_verification", "after_password_verification", "otro"
         ]
         
         def self.included(klass)
@@ -182,14 +184,6 @@ module Authlogic
           klass.define_callbacks *METHODS
         end
         
-        private
-          METHODS.each do |method|
-            class_eval <<-"end_eval", __FILE__, __LINE__
-              def #{method}
-                run_callbacks(:#{method}) { |result, object| result == false }
-              end
-            end_eval
-          end
       end
       
       # The methods related to the password field.
@@ -208,8 +202,8 @@ module Authlogic
                 validates_length_of :password_confirmation, validates_length_of_password_confirmation_field_options
               end
             end
-            
-            after_save :reset_password_changed
+
+            save_callback :after, :reset_password_changed
           end
         end
         
@@ -223,12 +217,12 @@ module Authlogic
           # the password.
           def password=(pass)
             return if ignore_blank_passwords? && pass.blank?
-            before_password_set
+            _run_before_password_set_callbacks #callbacks
             @password = pass
             send("#{password_salt_field}=", Authlogic::Random.friendly_token) if password_salt_field
             send("#{crypted_password_field}=", crypto_provider.encrypt(*encrypt_arguments(@password, act_like_restful_authentication? ? :restful_authentication : nil)))
             @password_changed = true
-            after_password_set
+            _run_after_password_set_callbacks # callbacks
           end
         
           # Accepts a raw password to determine if it is the correct password or not. Notice the second argument. That defaults to the value of
@@ -237,7 +231,7 @@ module Authlogic
           def valid_password?(attempted_password, check_against_database = check_passwords_against_database?)
             crypted = check_against_database && send("#{crypted_password_field}_changed?") ? send("#{crypted_password_field}_was") : send(crypted_password_field)
             return false if attempted_password.blank? || crypted.blank?
-            before_password_verification
+            _run_before_password_verification_callbacks
           
             crypto_providers.each_with_index do |encryptor, index|
               # The arguments_type of for the transitioning from restful_authentication
@@ -247,7 +241,7 @@ module Authlogic
             
               if encryptor.matches?(crypted, *encrypt_arguments(attempted_password, check_against_database, arguments_type))
                 transition_password(attempted_password) if transition_password?(index, encryptor, crypted, check_against_database)
-                after_password_verification
+                _run_after_password_verification_callbacks
                 return true
               end
             end
@@ -320,6 +314,8 @@ module Authlogic
             
             def reset_password_changed
               @password_changed = nil
+              # return true to avoid the callback return nil when the callback :after is excecuted (bug?)
+              true
             end
           
             def crypted_password_field

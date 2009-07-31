@@ -27,13 +27,13 @@ module Authlogic
       # All methods for the logged in status feature seat.
       module Methods
         def self.included(klass)
-          return if !klass.column_names.include?("last_request_at")
+          return if !klass.properties.collect{ |p| p.name }.include?("last_request_at")
           
           klass.class_eval do
             include InstanceMethods
             
-            named_scope :logged_in, lambda { {:conditions => ["last_request_at > ?", logged_in_timeout.seconds.ago]} }
-            named_scope :logged_out, lambda { {:conditions => ["last_request_at is NULL or last_request_at <= ?", logged_in_timeout.seconds.ago]} }
+            #named_scope :logged_in, lambda { {:conditions => ["last_request_at > ?", logged_in_timeout.seconds.ago]} }
+            #named_scope :logged_out, lambda { {:conditions => ["last_request_at is NULL or last_request_at <= ?", logged_in_timeout.seconds.ago]} }
           end
         end
         

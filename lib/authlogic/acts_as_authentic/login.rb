@@ -16,7 +16,7 @@ module Authlogic
         # * <tt>Default:</tt> :login or :username, if they exist
         # * <tt>Accepts:</tt> Symbol
         def login_field(value = nil)
-          rw_config(:login_field, value, first_column_to_exist(nil, :login, :username))
+          rw_config(:login_field, value, first_property_to_exist(:login, :username))
         end
         alias_method :login_field=, :login_field
         
@@ -116,7 +116,7 @@ module Authlogic
         private
           def find_with_case(field, value, sensitivity = true)
             if sensitivity
-              send("find_by_#{field}", value)
+              send("by_#{field}", { :key => value })
             else
               first(:conditions => ["LOWER(#{quoted_table_name}.#{field}) = ?", value.downcase])
             end

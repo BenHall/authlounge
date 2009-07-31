@@ -61,16 +61,11 @@ module Authlogic
         private
           def acts_as_authentic_modules
             key = :acts_as_authentic_modules
-            inheritable_attributes.include?(key) ? read_inheritable_attribute(key) : []
+            ::CouchRest::Document.inheritable_attributes.include?(key) ? ::CouchRest::Document.read_inheritable_attribute(key) : []
           end
           
           def db_setup?
-            begin
-              column_names
-              true
-            rescue Exception
-              false
-            end
+            true
           end
           
           def rw_config(key, value, default_value = nil, read_value = nil)
@@ -81,20 +76,19 @@ module Authlogic
             end
           end
           
-          def first_column_to_exist(*columns_to_check)
-            if db_setup?
-              columns_to_check.each { |column_name| return column_name.to_sym if column_names.include?(column_name.to_s) }
-            end
-            columns_to_check.first && columns_to_check.first.to_sym
+          def first_property_to_exist(*properties_to_check)
+            properties = self.properties.collect{ |p| p.name }
+            properties_to_check.each { |property| return property if properties.include?(property.to_s) }
           end
       end
+
     end
   end
 end
 
-if defined?(::ActiveRecord)
-  module ::ActiveRecord
-    class Base
+if defined?(::CouchRest)
+  module ::CouchRest
+    class Document
       include Authlogic::ActsAsAuthentic::Base
       include Authlogic::ActsAsAuthentic::Email
       include Authlogic::ActsAsAuthentic::LoggedInStatus

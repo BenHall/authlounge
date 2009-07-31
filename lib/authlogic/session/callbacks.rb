@@ -60,6 +60,7 @@ module Authlogic
         "before_destroy", "after_destroy"
       ]
       
+      
       def self.included(base) #:nodoc:
         base.send :include, ActiveSupport::Callbacks
         base.define_callbacks *METHODS
@@ -67,6 +68,7 @@ module Authlogic
       
       private
         METHODS.each do |method|
+          callback_method = "_run_#{method}_callbacks"
           class_eval <<-"end_eval", __FILE__, __LINE__
             def #{method}
               run_callbacks(:#{method}) { |result, object| result == false }
@@ -80,7 +82,7 @@ module Authlogic
         
         def save_record(alternate_record = nil)
           r = alternate_record || record
-          r.save_without_session_maintenance(false) if r && r.changed?
+          r.save_without_session_maintenance(false) if r # && r.changed?
         end
     end
   end
