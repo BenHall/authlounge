@@ -1,6 +1,10 @@
-= Authlogic
+= Authlounge
 
-Authlogic is a clean, simple, and unobtrusive ruby authentication solution.
+Based on Authlogic is a clean, simple, and unobtrusive ruby authentication solution to use with couchdb.
+
+== Requirements
+
+peterpunk-couchrest
 
 A code example can replace a thousand words...
 
