@@ -13,22 +13,30 @@ module ActsAsAuthenticTest
     end
     
     def test_named_scope_logged_in
-      assert_equal 0, User.logged_in.count
-      User.first.update_attribute(:last_request_at, Time.now)
-      assert_equal 1, User.logged_in.count
+      reset_users
+      assert_equal 0, User.logged_in.size
+      u = User.all()[0]
+      u.last_request_at = Time.now
+      u.save_without_callbacks
+      assert_equal 1, User.logged_in.size
     end
     
     def test_named_scope_logged_out
-      assert_equal 2, User.logged_out.count
-      User.first.update_attribute(:last_request_at, Time.now)
-      assert_equal 1, User.logged_out.count
+      reset_users
+      assert_equal 2, User.logged_out.size
+      u = User.all()[1]
+      u.last_request_at = Time.now
+      u.save_without_callbacks
+      assert_equal 1, User.logged_out.size
     end
     
     def test_logged_in_logged_out
-      u = User.first
+      reset_users
+      u = User.all()[0]
       assert !u.logged_in?
       assert u.logged_out?
       u.last_request_at = Time.now
+      u.save_without_callbacks
       assert u.logged_in?
       assert !u.logged_out?
     end

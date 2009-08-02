@@ -83,7 +83,7 @@ module Authlogic
         # * <tt>Default:</tt> {:case_sensitive => false, :scope => validations_scope, :if => "#{email_field}_changed?".to_sym}
         # * <tt>Accepts:</tt> Hash of options accepted by validates_uniqueness_of
         def validates_uniqueness_of_email_field_options(value = nil)
-          rw_config(:validates_uniqueness_of_email_field_options, value, {:case_sensitive => false, :scope => validations_scope, :if => "#{email_field}_changed?".to_sym})
+          rw_config(:validates_uniqueness_of_email_field_options, value, {:case_sensitive => false, :if => "#{email_field}_changed?".to_sym})
         end
         alias_method :validates_uniqueness_of_email_field_options=, :validates_uniqueness_of_email_field_options
         
@@ -97,14 +97,16 @@ module Authlogic
       module Methods
         def self.included(klass)
           klass.class_eval do
+          
             if validate_email_field && email_field
+              view_by email_field
               validates_length email_field, validates_length_of_email_field_options
               # TODO re add options here
               # old code
               # validates_format_of email_field, validates_format_of_email_field_options
               validates_format :email, :as => :email_address
               # TODO add this thing 
-              # validates_uniqueness_of email_field, validates_uniqueness_of_email_field_options
+              validates_is_unique email_field, validates_uniqueness_of_email_field_options
             end
           end
         end

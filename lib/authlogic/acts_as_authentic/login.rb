@@ -16,7 +16,7 @@ module Authlogic
         # * <tt>Default:</tt> :login or :username, if they exist
         # * <tt>Accepts:</tt> Symbol
         def login_field(value = nil)
-          rw_config(:login_field, value, first_property_to_exist(:login, :username))
+          rw_config(:login_field, value, first_property_to_exist(nil, :login, :username))
         end
         alias_method :login_field=, :login_field
         
@@ -77,10 +77,10 @@ module Authlogic
         # merge options into it. Checkout the convenience function merge_validates_format_of_login_field_options to merge
         # options.</b>
         #
-        # * <tt>Default:</tt> {:case_sensitive => false, :scope => validations_scope, :if => "#{login_field}_changed?".to_sym}
+        # * <tt>Default:</tt> {:case_sensitive => false, :if => "#{login_field}_changed?".to_sym}
         # * <tt>Accepts:</tt> Hash of options accepted by validates_uniqueness_of
         def validates_uniqueness_of_login_field_options(value = nil)
-          rw_config(:validates_uniqueness_of_login_field_options, value, {:case_sensitive => false, :scope => validations_scope, :if => "#{login_field}_changed?".to_sym})
+          rw_config(:validates_uniqueness_of_login_field_options, value, {:case_sensitive => false, :if => "#{login_field}_changed?".to_sym})
         end
         alias_method :validates_uniqueness_of_login_field_options=, :validates_uniqueness_of_login_field_options
         
@@ -118,7 +118,7 @@ module Authlogic
             if sensitivity
               send("by_#{field}", { :key => value })
             else
-              first(:conditions => ["LOWER(#{quoted_table_name}.#{field}) = ?", value.downcase])
+              send("by_#{field}", { :startkey => value.downcase, :endkey => value.upcase }).first
             end
           end
       end
@@ -129,9 +129,10 @@ module Authlogic
         def self.included(klass)
           klass.class_eval do
             if validate_login_field && login_field
-              validates_length_of login_field, validates_length_of_login_field_options
-              validates_format_of login_field, validates_format_of_login_field_options
-              validates_uniqueness_of login_field, validates_uniqueness_of_login_field_options
+              view_by login_field 
+              validates_length login_field, validates_length_of_login_field_options
+              validates_format login_field, validates_format_of_login_field_options
+              validates_is_unique login_field, validates_uniqueness_of_login_field_options
             end
           end
         end

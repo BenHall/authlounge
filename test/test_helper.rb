@@ -2,7 +2,9 @@ require "test/unit"
 require "rubygems"
 require "ruby-debug"
 require "active_record"
-require "active_record/fixtures"
+require "couchrest"
+require "action_controller"
+#require "active_record/fixtures"
 
 # A temporary fix to bring active record errors up to speed with rails edge.
 # I need to remove this once the new gem is released. This is only here so my tests pass.
@@ -14,92 +16,19 @@ class ActiveRecord::Errors
 end
 
 
-ActiveRecord::Schema.verbose = false
-ActiveRecord::Base.establish_connection(:adapter => "sqlite3", :dbfile => ":memory:")
-ActiveRecord::Base.configurations = true
-ActiveRecord::Schema.define(:version => 1) do
-  create_table :companies do |t|
-    t.datetime  :created_at    
-    t.datetime  :updated_at
-    t.string    :name
-    t.boolean   :active
-  end
-
-  create_table :projects do |t|
-    t.datetime  :created_at      
-    t.datetime  :updated_at
-    t.string    :name
-  end
-  
-  create_table :projects_users, :id => false do |t|
-    t.integer :project_id
-    t.integer :user_id
-  end
-  
-  create_table :users do |t|
-    t.datetime  :created_at      
-    t.datetime  :updated_at
-    t.integer   :lock_version, :default => 0
-    t.integer   :company_id
-    t.string    :login
-    t.string    :crypted_password
-    t.string    :password_salt
-    t.string    :persistence_token
-    t.string    :single_access_token
-    t.string    :perishable_token
-    t.string    :email
-    t.string    :first_name
-    t.string    :last_name
-    t.integer   :login_count, :default => 0, :null => false
-    t.integer   :failed_login_count, :default => 0, :null => false
-    t.datetime  :last_request_at
-    t.datetime  :current_login_at
-    t.datetime  :last_login_at
-    t.string    :current_login_ip
-    t.string    :last_login_ip
-    t.boolean   :active, :default => true
-    t.boolean   :approved, :default => true
-    t.boolean   :confirmed, :default => true
-  end
-  
-  create_table :employees do |t|
-    t.datetime  :created_at      
-    t.datetime  :updated_at
-    t.integer   :company_id
-    t.string    :email
-    t.string    :crypted_password
-    t.string    :password_salt
-    t.string    :persistence_token
-    t.string    :first_name
-    t.string    :last_name
-    t.integer   :login_count, :default => 0, :null => false
-    t.datetime  :last_request_at
-    t.datetime  :current_login_at
-    t.datetime  :last_login_at
-    t.string    :current_login_ip
-    t.string    :last_login_ip
-  end
-  
-  create_table :affiliates do |t|
-    t.datetime  :created_at      
-    t.datetime  :updated_at
-    t.integer   :company_id
-    t.string    :username
-    t.string    :pw_hash
-    t.string    :pw_salt
-    t.string    :persistence_token
-  end
-  
-  create_table :ldapers do |t|
-    t.datetime  :created_at      
-    t.datetime  :updated_at
-    t.string    :ldap_login
-    t.string    :persistence_token
-  end
-end
+RAILS_ROOT = "#{File.dirname(__FILE__)}/.." unless defined?(RAILS_ROOT)
+RAILS_ENV = "test"
+SERVER = CouchRest.new
+DB = "authlounge_#{RAILS_ENV}"
+db = SERVER.database(DB)
+db.recreate! rescue nil
+SERVER.default_database = DB
 
 require File.dirname(__FILE__) + '/../lib/authlogic' unless defined?(Authlogic)
 require File.dirname(__FILE__) + '/../lib/authlogic/test_case'
+require File.dirname(__FILE__) + '/libs/belongs_to_company'
+require File.dirname(__FILE__) + '/libs/has_many_projects'
+require File.dirname(__FILE__) + '/libs/has_many_users'
 require File.dirname(__FILE__) + '/libs/project'
 require File.dirname(__FILE__) + '/libs/affiliate'
 require File.dirname(__FILE__) + '/libs/employee'
@@ -109,16 +38,18 @@ require File.dirname(__FILE__) + '/libs/user'
 require File.dirname(__FILE__) + '/libs/user_session'
 require File.dirname(__FILE__) + '/libs/company'
 
+
 Authlogic::CryptoProviders::AES256.key = "myafdsfddddddddddddddddddddddddddddddddddddddddddddddd"
 
-class ActiveSupport::TestCase
-  include ActiveRecord::TestFixtures
-  self.fixture_path = File.dirname(__FILE__) + "/fixtures"
-  self.use_transactional_fixtures = false
-  self.use_instantiated_fixtures  = false
-  self.pre_loaded_fixtures = false
-  fixtures :all
-  setup :activate_authlogic
+require File.dirname(__FILE__) + '/fixtures/users'
+require File.dirname(__FILE__) + '/fixtures/employees'
+
+
+class ActionController::TestCase
+
+  setup do 
+    activate_authlogic
+  end
   
   private
     def password_for(user)

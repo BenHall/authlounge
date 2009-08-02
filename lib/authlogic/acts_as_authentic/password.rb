@@ -5,7 +5,6 @@ module Authlogic
     module Password
       def self.included(klass)
         klass.class_eval do
-          puts "including password on #{klass}"
           extend Config
           add_acts_as_authentic_module(Callbacks)
           add_acts_as_authentic_module(Methods)
@@ -195,11 +194,11 @@ module Authlogic
             include InstanceMethods
             
             if validate_password_field
-              validates_length_of :password, validates_length_of_password_field_options
+              validates_length :password, validates_length_of_password_field_options
               
               if require_password_confirmation
-                validates_confirmation_of :password, validates_confirmation_of_password_field_options
-                validates_length_of :password_confirmation, validates_length_of_password_confirmation_field_options
+                validates_is_confirmed :password, validates_confirmation_of_password_field_options
+                validates_length :password_confirmation, validates_length_of_password_confirmation_field_options
               end
             end
 

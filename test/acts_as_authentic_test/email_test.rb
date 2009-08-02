@@ -44,7 +44,7 @@ module ActsAsAuthenticTest
     end
     
     def test_validates_uniqueness_of_email_field_options_config
-      default = {:case_sensitive => false, :scope => Employee.validations_scope, :if => "#{Employee.email_field}_changed?".to_sym}
+      default = {:case_sensitive => false, :if => "#{Employee.email_field}_changed?".to_sym}
       assert_equal default, Employee.validates_uniqueness_of_email_field_options
       
       Employee.validates_uniqueness_of_email_field_options = {:yes => "no"}
@@ -57,41 +57,41 @@ module ActsAsAuthenticTest
       u = User.new
       u.email = "a@a.a"
       assert !u.valid?
-      assert u.errors[:email].size > 0
+      assert u.errors.keys.include?(:email)
       
       u.email = "a@a.com"
       assert !u.valid?
-      assert u.errors[:email].size == 0
+      assert !u.errors.keys.include?(:email)
     end
     
     def test_validates_format_of_email_field
       u = User.new
       u.email = "aaaaaaaaaaaaa"
       assert !u.valid?
-      assert u.errors[:email].size > 0 
+      assert u.errors.keys.include?(:email)
       
       u.email = "a@a.com"
       assert !u.valid?
-      assert u.errors[:email].size == 0
+      assert !u.errors.keys.include?(:email)
       
       u.email = "dakota.dux+1@gmail.com"
       assert !u.valid?
-      assert u.errors[:email].size == 0
+      assert !u.errors.keys.include?(:email)
     end
     
     def test_validates_uniqueness_of_email_field
       u = User.new
       u.email = "bjohnson@binarylogic.com"
       assert !u.valid?
-      assert u.errors[:email].size > 0
+      assert u.errors.keys.include?(:email)
       
       u.email = "BJOHNSON@binarylogic.com"
       assert !u.valid?
-      assert u.errors[:email].size > 0
+      assert u.errors.keys.include?(:email)
       
       u.email = "a@a.com"
       assert !u.valid?
-      assert u.errors[:email].size == 0
+      assert !u.errors.keys.include?(:email)
     end
   end
 end

@@ -77,8 +77,8 @@ module Authlogic
           end
           
           def first_property_to_exist(*properties_to_check)
-            properties = self.properties.collect{ |p| p.name }
-            properties_to_check.each { |property| return property if properties.include?(property.to_s) }
+            properties_to_check.each { |property| return property if self.property_names.include?(property.to_s) }
+            properties_to_check.first && properties_to_check.first.to_sym
           end
       end
 

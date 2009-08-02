@@ -39,14 +39,14 @@ module Authlogic
       # All methods relating to the perishable token.
       module Methods
         def self.included(klass)
-          return if !klass.column_names.include?("perishable_token")
+          return if !klass.property_names.include?(:perishable_token)
           
           klass.class_eval do
             extend ClassMethods
             include InstanceMethods
             
-            validates_uniqueness_of :perishable_token, :if => :perishable_token_changed?
-            #save_callback :before, :reset_perishable_token, :unless => :disable_perishable_token_maintenance?
+            validates_is_unique :perishable_token, :if => :perishable_token_changed?
+            save_callback :before, :reset_perishable_token, :unless => :disable_perishable_token_maintenance?
 
           end
         end

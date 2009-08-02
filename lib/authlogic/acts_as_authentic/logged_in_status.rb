@@ -27,10 +27,29 @@ module Authlogic
       # All methods for the logged in status feature seat.
       module Methods
         def self.included(klass)
-          return if !klass.properties.collect{ |p| p.name }.include?("last_request_at")
+          return if !klass.property_names.include?("last_request_at")
           
           klass.class_eval do
             include InstanceMethods
+            
+            view_by :logged_in, :map => "function(doc) {
+                if (doc['couchrest-type'] == 'User' && doc['last_request_at']) {
+                  emit(doc['last_request_at'], null);
+                }
+              }"
+            view_by :logged_out, :map => "function(doc) {
+                if (doc['couchrest-type'] == 'User' && doc['last_request_at']) {
+                  emit(doc['last_request_at'], null);
+                }
+              }"
+
+            def self.logged_out
+              self.by_logged_out(:endkey => logged_in_timeout.seconds.ago)
+            end
+
+            def self.logged_in
+              self.by_logged_in(:startkey => logged_in_timeout.seconds.ago)
+            end
             
             #named_scope :logged_in, lambda { {:conditions => ["last_request_at > ?", logged_in_timeout.seconds.ago]} }
             #named_scope :logged_out, lambda { {:conditions => ["last_request_at is NULL or last_request_at <= ?", logged_in_timeout.seconds.ago]} }
@@ -38,6 +57,7 @@ module Authlogic
         end
         
         module InstanceMethods
+          
           # Returns true if the last_request_at > logged_in_timeout.
           def logged_in?
             raise "Can not determine the records login state because there is no last_request_at column" if !respond_to?(:last_request_at)

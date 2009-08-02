@@ -21,6 +21,8 @@ module Authlogic
               after_password_verification_callback :reset_persistence_token!, :if => :reset_persistence_token?
             end
             
+            view_by :persistence_token
+            
             validates_present :persistence_token
             validates_with_method :persistence_token, :persistence_token_unique?
             
@@ -49,7 +51,7 @@ module Authlogic
 
           # Validate uniqueness of persistence_token
           def persistence_token_unique?
-            if changed_attributes.include?(:persistence_token)
+            if changed_properties.include?(:persistence_token)
               self.class.by_persistence_token(:key => @persistence_token).length == 0
             else
               true
