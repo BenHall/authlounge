@@ -193,6 +193,8 @@ module Authlogic
           klass.class_eval do
             include InstanceMethods
             
+            attr_accessor :password_confirmation
+            
             if validate_password_field
               validates_length :password, validates_length_of_password_field_options
               
@@ -211,7 +213,7 @@ module Authlogic
           def password
             @password
           end
-        
+
           # This is a virtual method. Once a password is passed to it, it will create new password salt as well as encrypt
           # the password.
           def password=(pass)
