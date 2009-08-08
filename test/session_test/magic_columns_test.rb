@@ -13,6 +13,9 @@ module SessionTest
     end
     
     class InstanceMethodsTest < ActiveSupport::TestCase
+      def setup
+        reset_users
+      end
       def test_after_persisting_set_last_request_at
         ben = users(:ben)
         assert UserSession.create(ben)
@@ -20,15 +23,15 @@ module SessionTest
         set_cookie_for(ben)
         old_last_request_at = ben.last_request_at
         assert UserSession.find
-        ben.reload
+        ben = User.get(ben.id)
         assert ben.last_request_at != old_last_request_at
       end
     
       def test_valid_increase_failed_login_count
         ben = users(:ben)
         old_failed_login_count = ben.failed_login_count
-        assert !UserSession.create(:login => ben.login, :password => "wrong")
-        ben.reload
+        assert UserSession.create(:login => ben.login, :password => "wrong").new_session?
+        ben = User.get(ben.id)
         assert_equal old_failed_login_count + 1, ben.failed_login_count
       end
     
@@ -36,8 +39,8 @@ module SessionTest
         ben = users(:ben)
       
         # increase failed login count
-        assert !UserSession.create(:login => ben.login, :password => "wrong")
-        ben.reload
+        assert UserSession.create(:login => ben.login, :password => "wrong").new_session?
+        ben = User.get(ben.id)
       
         # grab old values
         old_login_count = ben.login_count
@@ -47,9 +50,9 @@ module SessionTest
         old_last_login_ip = ben.last_login_ip
         old_current_login_ip = ben.current_login_ip
       
-        assert UserSession.create(:login => ben.login, :password => "benrocks")
+        assert !UserSession.create(:login => ben.login, :password => "benrocks").new_session?
         
-        ben.reload
+        ben = User.get(ben.id)
         assert_equal old_login_count + 1, ben.login_count
         assert_equal 0, ben.failed_login_count
         assert_equal old_current_login_at, ben.last_login_at

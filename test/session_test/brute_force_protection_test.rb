@@ -3,6 +3,11 @@ require File.dirname(__FILE__) + '/../test_helper.rb'
 module SessionTest
   module BruteForceProtectionTest
     class ConfigTest < ActiveSupport::TestCase
+      setup do
+        reset_users
+        reset_employees
+      end
+      
       def test_consecutive_failed_logins_limit
         UserSession.consecutive_failed_logins_limit = 10
         assert_equal 10, UserSession.consecutive_failed_logins_limit
@@ -21,6 +26,11 @@ module SessionTest
     end
     
     class InstaceMethodsTest < ActiveSupport::TestCase
+
+      def setup
+        reset_users
+      end
+      
       def test_under_limit
         ben = users(:ben)
         ben.failed_login_count = UserSession.consecutive_failed_logins_limit - 1
@@ -32,10 +42,11 @@ module SessionTest
         ben = users(:ben)
         ben.failed_login_count = UserSession.consecutive_failed_logins_limit
         assert ben.save
-        assert !UserSession.create(:login => ben.login, :password => "benrocks")
-        assert !UserSession.create(ben)
-        ben.updated_at = (UserSession.failed_login_ban_for + 2.hours.to_i).seconds.ago
-        assert UserSession.create(ben)
+        assert UserSession.create(:login => ben.login, :password => "benrocks").new_session?
+        ben = User.get(ben.id)
+        assert UserSession.create(ben).new_session?
+        ben['updated_at'] = (UserSession.failed_login_ban_for + 2.hours.to_i).seconds.ago
+        assert !UserSession.create(ben).new_session?
       end
     
       def test_exceeding_failed_logins_limit
@@ -46,13 +57,13 @@ module SessionTest
           session = UserSession.new(:login => ben.login, :password => "badpassword1")
           assert !session.save
           assert session.errors[:password].size > 0
-          assert_equal i + 1, ben.reload.failed_login_count
+          assert_equal i + 1, User.get(ben.id).failed_login_count
         end
         
         session = UserSession.new(:login => ben.login, :password => "badpassword2")
         assert !session.save
         assert session.errors[:password].size == 0
-        assert_equal 3, ben.reload.failed_login_count
+        assert_equal 3, User.get(ben.id).failed_login_count
       
         UserSession.consecutive_failed_logins_limit = 50
       end
@@ -66,13 +77,17 @@ module SessionTest
           session = UserSession.new(:login => ben.login, :password => "badpassword1")
           assert !session.save
           assert session.invalid_password?
-          assert_equal i + 1, ben.reload.failed_login_count
+          assert_equal i + 1, User.get(ben.id).failed_login_count
         end
         
-        ActiveRecord::Base.connection.execute("update users set updated_at = '#{1.day.ago.to_s(:db)}' where login = '#{ben.login}'")
+        
+        u = User.get(ben.id)
+        u['updated_at'] = 1.day.ago.utc
+        u.save_without_callbacks
+
         session = UserSession.new(:login => ben.login, :password => "benrocks")
         assert session.save
-        assert_equal 0, ben.reload.failed_login_count
+        assert_equal 0, User.get(ben.id).failed_login_count
       
         UserSession.consecutive_failed_logins_limit = 50
         UserSession.generalize_credentials_error_messages false
@@ -86,13 +101,16 @@ module SessionTest
           session = UserSession.new(:login => ben.login, :password => "badpassword1")
           assert !session.save
           assert session.errors[:password].size > 0
-          assert_equal i + 1, ben.reload.failed_login_count
+          assert_equal i + 1, User.get(ben.id).failed_login_count
         end
+
+        u = User.get(ben.id)
+        u['updated_at'] = 1.day.ago.utc
+        u.save_without_callbacks
         
-        ActiveRecord::Base.connection.execute("update users set updated_at = '#{1.day.ago.to_s(:db)}' where login = '#{ben.login}'")
         session = UserSession.new(:login => ben.login, :password => "badpassword1")
         assert !session.save
-        assert_equal 1, ben.reload.failed_login_count
+        assert_equal 1, User.get(ben.id).failed_login_count
       
         UserSession.consecutive_failed_logins_limit = 50
       end

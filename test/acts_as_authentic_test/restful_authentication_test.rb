@@ -2,6 +2,12 @@ require File.dirname(__FILE__) + '/../test_helper.rb'
 
 module ActsAsAuthenticTest
   class RestfulAuthenticationTest < ActiveSupport::TestCase
+    
+    def setup
+      reset_users
+      reset_employees
+    end
+    
     def test_act_like_restful_authentication_config
       assert !User.act_like_restful_authentication
       assert !Employee.act_like_restful_authentication

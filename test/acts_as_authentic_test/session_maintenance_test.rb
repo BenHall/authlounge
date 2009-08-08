@@ -2,6 +2,12 @@ require File.dirname(__FILE__) + '/../test_helper.rb'
 
 module ActsAsAuthenticTest
   class SessionMaintenanceTest < ActiveSupport::TestCase
+
+    def setup
+      reset_users
+      reset_employees
+    end
+
     def test_maintain_sessions_config
       assert User.maintain_sessions
       User.maintain_sessions = false
@@ -11,7 +17,8 @@ module ActsAsAuthenticTest
     end
     
     def test_login_after_create
-      assert User.create(:login => "awesome", :password => "saweet", :password_confirmation => "saweet", :email => "awesome@awesome.com")
+      u = User.new(:login => "awesome", :password => "saweet", :password_confirmation => "saweet", :email => "awesome@awesome.com")
+      assert u.save
       assert UserSession.find
     end
     
@@ -25,11 +32,14 @@ module ActsAsAuthenticTest
 
     def test_update_session_after_password_modify
       ben = users(:ben)
-      UserSession.create(ben)
       old_session_key = controller.session["user_credentials"]
       old_cookie_key = controller.cookies["user_credentials"]
+      UserSession.create(ben)
+      ben = User.get(ben.id)
       ben.password = "newpass"
       ben.password_confirmation = "newpass"
+      ben = User.get(ben.id)
+      
       assert ben.save
       assert controller.session["user_credentials"]
       assert controller.cookies["user_credentials"]
@@ -53,7 +63,8 @@ module ActsAsAuthenticTest
       UserSession.create(ben)
       old_session_key = controller.session["user_credentials"]
       old_cookie_key = controller.cookies["user_credentials"]
-      assert User.create(:login => "awesome", :password => "saweet", :password_confirmation => "saweet", :email => "awesome@saweet.com")
+      u = User.new(:login => "awesome", :password => "saweet", :password_confirmation => "saweet", :email => "awesome@saweet.com")
+      assert u.save
       assert_equal controller.session["user_credentials"], old_session_key
       assert_equal controller.cookies["user_credentials"], old_cookie_key
     end
@@ -78,7 +89,7 @@ module ActsAsAuthenticTest
       ben.password_confirmation = "newpass"
       assert ben.save
       assert UserSession.find
-      assert_equal ben, UserSession.find.record
+      assert_equal ben.id, UserSession.find.record.id
     end
   end
 end

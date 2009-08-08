@@ -21,6 +21,9 @@ module SessionTest
     end
     
     class InstanceMethodsTest < ActiveSupport::TestCase
+      def setup
+        reset_users
+      end
       def test_persist_persist_by_params
         ben = users(:ben)
         session = UserSession.new
@@ -40,12 +43,12 @@ module SessionTest
       
         set_request_content_type("application/atom+xml")
         assert session.persisting?
-        assert_equal ben, session.record
+        assert_equal ben.id, session.record.id
         assert_nil controller.session["user_credentials"] # should not persist since this is single access
       
         set_request_content_type("application/rss+xml")
         assert session.persisting?
-        assert_equal ben, session.unauthorized_record
+        assert_equal ben.id, session.unauthorized_record.id
         assert_nil controller.session["user_credentials"]
       end
     end

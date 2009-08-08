@@ -28,13 +28,16 @@ module Authlogic
       # All method, for the single_access token aspect of acts_as_authentic.
       module Methods
         def self.included(klass)
-          return if !klass.property_names.include?(:single_access_token)
+          return if !klass.property_names.include?('single_access_token')
           
           klass.class_eval do
+            
             include InstanceMethods
-            validates_uniqueness_of :single_access_token, :if => changed_properties.include?(:single_access_token)
+            view_by :single_access_token
+            
+            validates_is_unique :single_access_token, :if => :single_access_token_changed?
             validate_callback :before, :reset_single_access_token, :if => :reset_single_access_token?
-            after_password_set_callback(:reset_single_access_token, :if => :change_single_access_token_with_password?) if respond_to?(:after_password_set_callback)
+            after_password_set_callback(:before, :reset_single_access_token, :if => :change_single_access_token_with_password?) if respond_to?(:after_password_set_callback)
           end
         end
         

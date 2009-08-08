@@ -56,7 +56,6 @@ module Authlogic
       def valid?
         errors.clear
         self.attempted_record = nil
-        
         before_validation
         new_session? ? before_validation_on_create : before_validation_on_update
         validate
@@ -67,7 +66,7 @@ module Authlogic
           after_validation
         end
         
-        save_record(attempted_record)
+        save = save_record(attempted_record)
         errors.size == 0
       end
       

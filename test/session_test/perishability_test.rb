@@ -2,6 +2,10 @@ require File.dirname(__FILE__) + '/../test_helper.rb'
 
 module SessionTest
   class PerishabilityTest < ActiveSupport::TestCase
+    def setup
+      reset_users
+      reset_employees
+    end
     def test_after_save
       ben = users(:ben)
       old_perishable_token = ben.perishable_token

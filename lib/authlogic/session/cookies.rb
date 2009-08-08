@@ -55,13 +55,14 @@ module Authlogic
         def credentials=(value)
           super
           values = value.is_a?(Array) ? value : [value]
-          case values.first
-          when Hash
+
+          if values.first.is_a?(Hash) and !(values.first.class < ::CouchRest::ExtendedDocument)
             self.remember_me = values.first.with_indifferent_access[:remember_me]
           else
             r = values.find { |value| value.is_a?(TrueClass) || value.is_a?(FalseClass) }
             self.remember_me = r if !r.nil?
           end
+
         end
         
         # Is the cookie going to expire after the session is over, or will it stick around?
@@ -105,8 +106,8 @@ module Authlogic
           def persist_by_cookie
             persistence_token, record_id = cookie_credentials
             if !persistence_token.nil?
-              record = record_id.nil? ? search_for_record("by_persistence_token", { :key => persistence_token }) : search_for_record("by_id", { :key => record_id})
-              record = record.empty? ? nil : record.first
+              record = record_id.nil? ? search_for_record("by_persistence_token", { :key => persistence_token }).first : search_for_record("get", record_id)
+              #record = record.empty? ? nil : record.first
               self.unauthorized_record = record if record && record.persistence_token == persistence_token
               valid?
             else

@@ -3,16 +3,26 @@ require File.dirname(__FILE__) + '/../test_helper.rb'
 module SessionTest
   module ExistenceTest
     class ClassMethodsTest < ActiveSupport::TestCase
+
+      def setup
+        reset_users
+      end
+
       def test_create
         ben = users(:ben)
-        assert !UserSession.create(:login => "somelogin", :password => "badpw2")
-        assert UserSession.create(:login => ben.login, :password => "benrocks")
+        assert UserSession.create(:login => "somelogin", :password => "badpw2").new_session?
+        assert !UserSession.create(:login => ben.login, :password => "benrocks").new_session?
         assert_raise(Authlogic::Session::Existence::SessionInvalidError) { UserSession.create!(:login => ben.login, :password => "badpw") }
-        assert UserSession.create!(:login => ben.login, :password => "benrocks")
+        assert !UserSession.create!(:login => ben.login, :password => "benrocks").new_session?
       end
     end
     
     class IsntaceMethodsTest < ActiveSupport::TestCase
+
+      def setup
+        reset_users
+      end
+
       def test_new_session
         session = UserSession.new
         assert session.new_session?

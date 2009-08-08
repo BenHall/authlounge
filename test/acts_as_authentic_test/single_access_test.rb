@@ -2,6 +2,11 @@ require File.dirname(__FILE__) + '/../test_helper.rb'
 
 module ActsAsAuthenticTest
   class SingleAccessTest < ActiveSupport::TestCase
+    def setup
+      reset_users
+      reset_employees
+    end
+    
     def test_change_single_access_token_with_password_config
       assert !User.change_single_access_token_with_password
       assert !Employee.change_single_access_token_with_password
@@ -16,7 +21,7 @@ module ActsAsAuthenticTest
       u = User.new
       u.single_access_token = users(:ben).single_access_token
       assert !u.valid?
-      assert u.errors[:single_access_token].size > 0
+      assert u.errors.keys.include?(:single_access_token)
     end
     
     def test_before_validation_reset_single_access_token

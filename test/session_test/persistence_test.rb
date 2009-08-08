@@ -2,6 +2,10 @@ require File.dirname(__FILE__) + '/../test_helper.rb'
 
 module SessionTest
   class PersistenceTest < ActiveSupport::TestCase
+    def setup
+      reset_users
+    end
+
     def test_find
       ben = users(:ben)
       assert !UserSession.find

@@ -2,10 +2,7 @@ def create_ben
 
   ben = User.new
   ben.company = "binary_logic"
-  #ben.projects = "web_services"
   ben.login = "bjohnson"
-  ben.password = "bjohnson"
-  ben.password_confirmation = "bjohnson"
   ben.password_salt = salt = Authlogic::Random.hex_token
   ben.crypted_password = Authlogic::CryptoProviders::Sha512.encrypt("benrocks" + salt)
   ben.persistence_token = "6cde0674657a8a313ce952df979de2830309aa4c11ca65805dd00bfdc65dbcc2f5e36718660a1d2e68c1a08c276d996763985d2f06fd3d076eb7bc4d97b1e317"
@@ -14,10 +11,11 @@ def create_ben
   ben.email = "bjohnson@binarylogic.com"
   ben.first_name = "Ben"
   ben.last_name = "Johnson"
+  ben['updated_at'] = Time.now.utc
+  ben['created_at'] = ben['updated_at'] if ben.new_document?
 
-  unless ben.save
-    puts ben.errors.inspect
-  end
+  ben.save_without_callbacks
+
   ben
 end
 
@@ -25,9 +23,6 @@ def create_zack
 
   zack = User.new
   zack.company = "logic_over_data"
-  #zack.projects = "web_services"
-  zack.password = "zackrocks"
-  zack.password_confirmation = "zackrocks"
   zack.login = "zackham"
   zack.password_salt = salt = Authlogic::Random.hex_token
   zack.crypted_password = Authlogic::CryptoProviders::Sha512.encrypt("zackrocks" + salt) 
@@ -36,10 +31,10 @@ def create_zack
   zack.email = "zham@ziggityzack.com"
   zack.first_name = "Zack"
   zack.last_name = "Ham"
+  zack['updated_at'] = Time.now.utc
+  zack['created_at'] = zack['updated_at'] if zack.new_document?
 
-  unless zack.save
-    puts zack.errors.inspect
-  end
+  zack.save_without_callbacks
   zack
 
 end
@@ -51,8 +46,8 @@ def users(key)
 end
 
 def reset_users
-
-  User.all.each do |user|
+  all_users =   User.all
+  all_users.each do |user|
     user.destroy
   end
 

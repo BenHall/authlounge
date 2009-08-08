@@ -174,8 +174,8 @@ module Authlogic
       # Callbacks / hooks to allow other modules to modify the behavior of this module.
       module Callbacks
         METHODS = [
-          "before_password_set", "after_password_set",
-          "before_password_verification", "after_password_verification", "otro"
+          :before_password_set, :after_password_set,
+          :before_password_verification, :after_password_verification
         ]
         
         def self.included(klass)
@@ -216,30 +216,35 @@ module Authlogic
           # the password.
           def password=(pass)
             return if ignore_blank_passwords? && pass.blank?
-            _run_before_password_set_callbacks #callbacks
+            _run_before_password_set_callbacks
             @password = pass
             send("#{password_salt_field}=", Authlogic::Random.friendly_token) if password_salt_field
             send("#{crypted_password_field}=", crypto_provider.encrypt(*encrypt_arguments(@password, act_like_restful_authentication? ? :restful_authentication : nil)))
+            
             @password_changed = true
-            _run_after_password_set_callbacks # callbacks
+            _run_after_password_set_callbacks 
           end
         
           # Accepts a raw password to determine if it is the correct password or not. Notice the second argument. That defaults to the value of
           # check_passwords_against_database. See that method for mor information, but basically it just tells Authlogic to check the password
           # against the value in the database or the value in the object.
           def valid_password?(attempted_password, check_against_database = check_passwords_against_database?)
-            crypted = check_against_database && send("#{crypted_password_field}_changed?") ? send("#{crypted_password_field}_was") : send(crypted_password_field)
+            crypted = check_against_database && send("#{crypted_password_field}_changed?") ? changed_properties[crypted_password_field] : send(crypted_password_field)
             return false if attempted_password.blank? || crypted.blank?
+            
             _run_before_password_verification_callbacks
-          
+
             crypto_providers.each_with_index do |encryptor, index|
+
               # The arguments_type of for the transitioning from restful_authentication
               arguments_type = (act_like_restful_authentication? && index == 0) ||
                 (transition_from_restful_authentication? && index > 0 && encryptor == Authlogic::CryptoProviders::Sha1) ?
                 :restful_authentication : nil
             
               if encryptor.matches?(crypted, *encrypt_arguments(attempted_password, check_against_database, arguments_type))
-                transition_password(attempted_password) if transition_password?(index, encryptor, crypted, check_against_database)
+                if transition_password?(index, encryptor, crypted, check_against_database)
+                  transition_password(attempted_password) 
+                end
                 _run_after_password_verification_callbacks
                 return true
               end
@@ -274,7 +279,7 @@ module Authlogic
             
             def encrypt_arguments(raw_password, check_against_database, arguments_type = nil)
               salt = nil
-              salt = (check_against_database && send("#{password_salt_field}_changed?") ? send("#{password_salt_field}_was") : send(password_salt_field)) if password_salt_field
+              salt = (check_against_database && send("#{password_salt_field}_changed?") ? changed_properties[password_salt_field] : send(password_salt_field)) if password_salt_field
               
               case arguments_type
               when :restful_authentication
@@ -290,13 +295,14 @@ module Authlogic
             # If we aren't using database values
             # If we are using database values, only if the password hasnt change so we don't overwrite any changes
             def transition_password?(index, encryptor, crypted, check_against_database)
-              (index > 0 || (encryptor.respond_to?(:cost_matches?) && !encryptor.cost_matches?(send(crypted_password_field)))) &&
+              value = (index > 0 || (encryptor.respond_to?(:cost_matches?) && !encryptor.cost_matches?(send(crypted_password_field)))) &&
                 (!check_against_database || !send("#{crypted_password_field}_changed?"))
+              return value
             end
             
             def transition_password(attempted_password)
               self.password = attempted_password
-              save(false)
+              save_without_callbacks(false)
             end
           
             def require_password?

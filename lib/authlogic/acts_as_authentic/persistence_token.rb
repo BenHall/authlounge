@@ -16,7 +16,7 @@ module Authlogic
             extend ClassMethods
             include InstanceMethods
             
-            if respond_to?(:after_password_set) && respond_to?(:after_password_verification)
+            if respond_to?(:after_password_set_callback) && respond_to?(:after_password_verification_callback)
               after_password_set_callback :reset_persistence_token
               after_password_verification_callback :reset_persistence_token!, :if => :reset_persistence_token?
             end
@@ -26,7 +26,7 @@ module Authlogic
             validates_present :persistence_token
             validates_with_method :persistence_token, :persistence_token_unique?
             
-            validate_callback :reset_persistence_token, :if => :reset_persistence_token?
+            validate_callback :before, :reset_persistence_token, :if => :reset_persistence_token?
 
           end
         end
@@ -38,11 +38,12 @@ module Authlogic
             # Paginate these to save on memory
             records = nil
             i = 0
-            begin
-              records = find(:all, :limit => 50, :offset => i)
+            #begin
+              #records = all(:limit => 50, :offset => i)
+              records = all()
               records.each { |record| record.forget! }
               i += 50
-            end while !records.blank?
+            #end while !records.blank?
           end
         end
         
@@ -51,15 +52,17 @@ module Authlogic
 
           # Validate uniqueness of persistence_token
           def persistence_token_unique?
-            if changed_properties.include?(:persistence_token)
+            if changed_properties.include?(:persistence_token) && @persistence_token
               self.class.by_persistence_token(:key => @persistence_token).length == 0
             else
               true
             end
           end
+
           # Resets the persistence_token field to a random hex value.
           def reset_persistence_token
             self.persistence_token = Authlogic::Random.hex_token
+            self.persistence_token
           end
           
           # Same as reset_persistence_token, but then saves the record.

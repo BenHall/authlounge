@@ -2,6 +2,9 @@ require File.dirname(__FILE__) + '/../test_helper.rb'
 
 module SessionTest
   class ValidationTest < ActiveSupport::TestCase
+    def setup
+      reset_users
+    end
     def test_errors
       session = UserSession.new
       assert session.errors.is_a?(Authlogic::Session::Validation::Errors)

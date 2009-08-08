@@ -4,7 +4,7 @@ require "ruby-debug"
 require "active_record"
 require "couchrest"
 require "action_controller"
-#require "active_record/fixtures"
+require "active_record/fixtures"
 
 # A temporary fix to bring active record errors up to speed with rails edge.
 # I need to remove this once the new gem is released. This is only here so my tests pass.
@@ -44,12 +44,12 @@ Authlogic::CryptoProviders::AES256.key = "myafdsfddddddddddddddddddddddddddddddd
 require File.dirname(__FILE__) + '/fixtures/users'
 require File.dirname(__FILE__) + '/fixtures/employees'
 
+$COUCHREST_DEBUG = true
 
-class ActionController::TestCase
+class ActiveSupport::TestCase
 
-  setup do 
-    activate_authlogic
-  end
+  include ActiveRecord::TestFixtures
+  setup :activate_authlogic
   
   private
     def password_for(user)

@@ -23,12 +23,15 @@ module SessionTest
     end
     
     class InstanceMethodsTest < ActiveSupport::TestCase
+      def setup
+        reset_users
+      end
       def test_record_method
         ben = users(:ben)
         set_session_for(ben)
         session = UserSession.find
-        assert_equal ben, session.record
-        assert_equal ben, session.user
+        assert_equal ben.id, session.record.id
+        assert_equal ben.id, session.user.id
       end
     end
   end

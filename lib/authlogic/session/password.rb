@@ -143,7 +143,7 @@ module Authlogic
         def credentials=(value)
           super
           values = value.is_a?(Array) ? value : [value]
-          if values.first.is_a?(Hash)
+          if values.first.is_a?(Hash) and !(values.first.class < ::CouchRest::ExtendedDocument)
             values.first.with_indifferent_access.slice(login_field, password_field).each do |field, value|
               next if value.blank?
               send("#{field}=", value)
@@ -161,6 +161,7 @@ module Authlogic
           end
           
           def validate_by_password
+            
             self.invalid_password = false
             
             errors.add(login_field, I18n.t('error_messages.login_blank', :default => "cannot be blank")) if send(login_field).blank?
@@ -201,11 +202,17 @@ module Authlogic
           end
           
           def add_general_credentials_error
-            errors.add(:base, I18n.t('error_messages.general_credentials_error', :default => "#{login_field.to_s.humanize}/Password combination is not valid"))
+            error_message = 
+             if self.class.generalize_credentials_error_messages.is_a? String
+               self.class.generalize_credentials_error_messages
+             else
+               "#{login_field.to_s.humanize}/Password combination is not valid"
+             end
+             errors.add(:base, I18n.t('error_messages.general_credentials_error', :default => error_message))
           end
           
           def generalize_credentials_error_messages?
-            self.class.generalize_credentials_error_messages == true
+            self.class.generalize_credentials_error_messages
           end
           
           def password_field

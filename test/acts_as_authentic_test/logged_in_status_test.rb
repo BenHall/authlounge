@@ -16,7 +16,7 @@ module ActsAsAuthenticTest
       reset_users
       assert_equal 0, User.logged_in.size
       u = User.all()[0]
-      u.last_request_at = Time.now
+      u.last_request_at = Time.now.utc
       u.save_without_callbacks
       assert_equal 1, User.logged_in.size
     end
@@ -25,7 +25,7 @@ module ActsAsAuthenticTest
       reset_users
       assert_equal 2, User.logged_out.size
       u = User.all()[1]
-      u.last_request_at = Time.now
+      u.last_request_at = Time.now.utc
       u.save_without_callbacks
       assert_equal 1, User.logged_out.size
     end
@@ -35,7 +35,7 @@ module ActsAsAuthenticTest
       u = User.all()[0]
       assert !u.logged_in?
       assert u.logged_out?
-      u.last_request_at = Time.now
+      u.last_request_at = Time.now.utc
       u.save_without_callbacks
       assert u.logged_in?
       assert !u.logged_out?

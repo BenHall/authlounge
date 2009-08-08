@@ -53,7 +53,7 @@ module Authlogic
         # * <tt>Default:</tt> "#{klass.name}Session".constantize
         # * <tt>Accepts:</tt> Class
         def session_class(value = nil)
-          const = "#{base_class.name}Session".constantize rescue nil
+          const = "#{self.name}Session".constantize rescue nil
           rw_config(:session_class, value, const)
         end
         alias_method :session_class=, :session_class
@@ -62,15 +62,19 @@ module Authlogic
       module Methods
         def self.included(klass)
           klass.class_eval do
-            save_callback :get_session_information, :if => :update_sessions?
-            save_callback :maintain_sessions, :if => :update_sessions?
+            save_callback :before, :get_session_information, :if => :update_sessions?
+            save_callback :before, :maintain_sessions, :if => :update_sessions?
           end
         end
         
         # Save the record and skip session maintenance all together.
-        def save_without_session_maintenance(*args)
+        def save_without_session_maintenance(with_validation = true)
           self.skip_session_maintenance = true
-          result = save(*args)
+          if with_validation
+            result = save
+          else
+            result = save_without_callbacks
+          end
           self.skip_session_maintenance = false
           result
         end

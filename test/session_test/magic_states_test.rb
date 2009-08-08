@@ -13,11 +13,17 @@ module SessionTest
     end
     
     class InstanceMethodsTest < ActiveSupport::TestCase
+
+      def setup
+        reset_users
+      end
+
       def test_disabling_magic_states
         UserSession.disable_magic_states = true
       
         ben = users(:ben)
-        ben.update_attribute(:active, false)
+        ben['active'] = false
+        ben.save_without_callbacks
         assert UserSession.create(ben)
       
         UserSession.disable_magic_states = false
@@ -29,7 +35,8 @@ module SessionTest
         session.unauthorized_record = ben
         assert session.valid?
       
-        ben.update_attribute(:active, false)
+        ben['active'] = false
+        ben.save_without_callbacks
         assert !session.valid?
         assert session.errors[:base].size > 0
       end
@@ -40,7 +47,8 @@ module SessionTest
         session.unauthorized_record = ben
         assert session.valid?
       
-        ben.update_attribute(:approved, false)
+        ben['approved'] = false
+        ben.save_without_callbacks
         assert !session.valid?
         assert session.errors[:base].size > 0
       end
@@ -51,7 +59,9 @@ module SessionTest
         session.unauthorized_record = ben
         assert session.valid?
       
-        ben.update_attribute(:confirmed, false)
+
+        ben['confirmed'] = false
+        ben.save_without_callbacks
         assert !session.valid?
         assert session.errors[:base].size > 0
       end

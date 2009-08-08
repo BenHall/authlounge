@@ -2,6 +2,9 @@ require File.dirname(__FILE__) + '/../test_helper.rb'
 
 module SessionTest
   class UnauthorizedRecordTest < ActiveSupport::TestCase
+    def setup
+      reset_users
+    end
     def test_credentials
       ben = users(:ben)
       session = UserSession.new

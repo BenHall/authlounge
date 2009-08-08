@@ -2,6 +2,10 @@ require File.dirname(__FILE__) + '/../test_helper.rb'
 
 module ActsAsAuthenticTest
   class PasswordTest < ActiveSupport::TestCase
+    def setup
+      reset_users
+      reset_employees
+    end
     def test_crypted_password_field_config
       assert_equal :crypted_password, User.crypted_password_field
       assert_equal :crypted_password, Employee.crypted_password_field
@@ -107,11 +111,11 @@ module ActsAsAuthenticTest
       u = User.new
       u.password_confirmation = "test2"
       assert !u.valid?
-      assert u.errors[:password].size > 0
+      assert u.errors.keys.include?(:password)
       
       u.password = "test"
       assert !u.valid?
-      assert u.errors[:password_confirmation].size == 0
+      assert !u.errors.keys.include?(:password_confirmation)
     end
     
     def test_validates_confirmation_of_password
@@ -119,11 +123,11 @@ module ActsAsAuthenticTest
       u.password = "test"
       u.password_confirmation = "test2"
       assert !u.valid?
-      assert u.errors[:password].size > 0
+      assert u.errors.keys.include?(:password)
       
       u.password_confirmation = "test"
       assert !u.valid?
-      assert u.errors[:password].size == 0
+      assert !u.errors.keys.include?(:password_confirmation)
     end
     
     def test_validates_length_of_password_confirmation
@@ -132,18 +136,19 @@ module ActsAsAuthenticTest
       u.password = "test"
       u.password_confirmation = ""
       assert !u.valid?
-      assert u.errors[:password_confirmation].size > 0
+      assert u.errors.keys.include?(:password_confirmation)
       
       u.password_confirmation = "test"
       assert !u.valid?
-      assert u.errors[:password_confirmation].size == 0
+      assert !u.errors.keys.include?(:password_confirmation)
+
       
       ben = users(:ben)
       assert ben.valid?
       
       ben.password = "newpass"
       assert !ben.valid?
-      assert ben.errors[:password_confirmation].size > 0
+      assert ben.errors.keys.include?(:password_confirmation)
       
       ben.password_confirmation = "newpass"
       assert ben.valid?
@@ -196,7 +201,7 @@ module ActsAsAuthenticTest
       assert_not_equal old_password_salt, ben.password_salt
       
       # make sure it didn't go into the db
-      ben.reload
+      ben = User.get(ben[:_id])
       assert_equal old_crypted_password, ben.crypted_password
       assert_equal old_password_salt, ben.password_salt
       
@@ -206,7 +211,7 @@ module ActsAsAuthenticTest
       assert_not_equal old_password_salt, ben.password_salt
       
       # make sure it did go into the db
-      ben.reload
+      ben = User.get(ben[:_id])
       assert_not_equal old_crypted_password, ben.crypted_password
       assert_not_equal old_password_salt, ben.password_salt
     end
@@ -218,6 +223,7 @@ module ActsAsAuthenticTest
           c.crypto_provider = crypto_provider
           c.transition_from_crypto_providers = from_crypto_providers
         end
+        
         records.each do |record|
           old_hash = record.crypted_password
           old_persistence_token = record.persistence_token

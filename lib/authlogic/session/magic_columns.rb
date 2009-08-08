@@ -52,8 +52,11 @@ module Authlogic
           
             if record.respond_to?(:current_login_at)
               record.last_login_at = record.current_login_at if record.respond_to?(:last_login_at)
-              #TODO default timezone
-              #record.current_login_at = klass.default_timezone == :utc ? Time.now.utc : Time.now
+              if klass.respond_to?(:default_timezone)
+                record.current_login_at = klass.default_timezone == :utc ? Time.now.utc : Time.now
+              else
+                record.current_login_at = Time.now.utc
+              end
             end
           
             if record.respond_to?(:current_login_ip)
@@ -77,13 +80,17 @@ module Authlogic
           #
           # You can do whatever you want with that method.
           def set_last_request_at? # :doc:
-            return false if !record || !klass.column_names.include?("last_request_at")
+            return false if !record || !klass.property_names.include?('last_request_at')
             return controller.last_request_update_allowed? if controller.responds_to_last_request_update_allowed?
             record.last_request_at.blank? || last_request_at_threshold.to_i.seconds.ago >= record.last_request_at
           end
         
           def set_last_request_at
-            record.last_request_at = klass.default_timezone == :utc ? Time.now.utc : Time.now
+            if klass.respond_to?(:default_timezone)
+              record.last_request_at = klass.default_timezone == :utc ? Time.now.utc : Time.now
+            else
+              record.last_request_at = Time.now.utc
+            end
           end
           
           def last_request_at_threshold

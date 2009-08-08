@@ -2,6 +2,12 @@ require File.dirname(__FILE__) + '/../test_helper.rb'
 
 module ActsAsAuthenticTest
   class PersistenceTokenTest < ActiveSupport::TestCase
+
+    def setup
+      reset_users
+      reset_employees
+    end
+
     def test_after_password_set_reset_persistence_token
       ben = users(:ben)
       old_persistence_token = ben.persistence_token
@@ -16,7 +22,9 @@ module ActsAsAuthenticTest
       assert_equal old_persistence_token, ben.persistence_token
       
       # only update it if it is nil
-      assert ben.update_attribute(:persistence_token, nil)
+      #assert ben.update_attribute(:persistence_token, nil)
+      ben.persistence_token = nil
+      ben.save_without_callbacks
       assert ben.valid_password?(password_for(ben))
       assert_not_equal old_persistence_token, ben.persistence_token
     end
@@ -43,9 +51,10 @@ module ActsAsAuthenticTest
       http_basic_auth_for(ben) { UserSession.find }
       http_basic_auth_for(zack) { UserSession.find(:ziggity_zack) }
 
-      assert ben.reload.logged_in?
-      assert zack.reload.logged_in?
+      assert User.get(ben['_id']).logged_in?
+      assert User.get(zack['_id']).logged_in?
 
+      ben = User.get(ben['_id'])
       ben.forget!
 
       assert !UserSession.find

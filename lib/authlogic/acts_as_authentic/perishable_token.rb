@@ -39,7 +39,7 @@ module Authlogic
       # All methods relating to the perishable token.
       module Methods
         def self.included(klass)
-          return if !klass.property_names.include?(:perishable_token)
+          return if !klass.property_names.include?("perishable_token")
           
           klass.class_eval do
             extend ClassMethods
@@ -47,7 +47,15 @@ module Authlogic
             
             validates_is_unique :perishable_token, :if => :perishable_token_changed?
             save_callback :before, :reset_perishable_token, :unless => :disable_perishable_token_maintenance?
+            
+            view_by :perishable_token_with_timestamp, :map => "function(doc) {
+                if (doc['couchrest-type'] == 'User' && doc['perishable_token']) {
+                  emit([doc['perishable_token'],doc['updated_at']], null);
+                }
+              }"
 
+            view_by :perishable_token
+            
           end
         end
         
@@ -65,15 +73,13 @@ module Authlogic
             return if token.blank?
             age = age.to_i
             
-            conditions_sql = "perishable_token = ?"
-            conditions_subs = [token]
             
-            if column_names.include?("updated_at") && age > 0
-              conditions_sql += " and updated_at > ?"
-              conditions_subs << age.seconds.ago
+            if property_names.include?("updated_at") && age > 0
+              self.by_perishable_token_with_timestamp(:startkey => [token,age.seconds.ago]).first
+            else
+              self.by_perishable_token(:key => token).first
             end
             
-            find(:first, :conditions => [conditions_sql, *conditions_subs])
           end
         end
         

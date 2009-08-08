@@ -14,6 +14,7 @@ module Authlogic
       module ClassMethods
         private
           def rw_config(key, value, default_value = nil, read_value = nil)
+            #debugger if key == :login_field
             if value == read_value
               return read_inheritable_attribute(key) if inheritable_attributes.include?(key)
               write_inheritable_attribute(key, default_value)

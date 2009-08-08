@@ -3,6 +3,9 @@ require File.dirname(__FILE__) + '/../test_helper.rb'
 module SessionTest
   module CookiesTest
     class ConfiTest < ActiveSupport::TestCase
+      def setup
+        reset_users
+      end
       def test_cookie_key
         UserSession.cookie_key = "my_cookie_key"
         assert_equal "my_cookie_key", UserSession.cookie_key
@@ -39,6 +42,11 @@ module SessionTest
     end
     
     class InstanceMethodsTest < ActiveSupport::TestCase
+
+      def setup
+        reset_users
+      end
+
       def test_credentials
         session = UserSession.new
         session.credentials = {:remember_me => true}
@@ -84,7 +92,7 @@ module SessionTest
         assert !UserSession.find
         set_cookie_for(ben)
         assert session = UserSession.find
-        assert_equal ben, session.record
+        assert_equal ben.id, session.record.id
       end
     
       def test_after_save_save_cookie

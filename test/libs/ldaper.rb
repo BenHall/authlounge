@@ -4,10 +4,8 @@ class Ldaper < CouchRest::ExtendedDocument
   include CouchRest::Validation
   include CouchRest::Callbacks
   
-  property    :login
   property    :ldap_login
   property    :persistence_token
-  property    :email
   
   timestamps!
   
