@@ -1,10 +1,9 @@
 = Authlounge
 
-Based on Authlogic is a clean, simple, and unobtrusive ruby authentication solution to use with "couchdb":http://couchdb.apache.org/.
-
+Based on Authlogic is a clean, simple, and unobtrusive ruby authentication solution to use with {couchdb}[http://couchdb.apache.org/].
 == Requirements
 
-"peterpunk-couchrest":http://github.com/peterpunk/couchrest/tree/master it has some improvements like uniqueness validator.
+{peterpunk-couchrest}[http://github.com/peterpunk/couchrest/tree/master] it has some improvements like uniqueness validator.
 
 How different is from authlogic?
 
