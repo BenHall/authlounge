@@ -26,7 +26,7 @@ module SessionTest
         UserSession.generalize_credentials_error_messages false
         assert !UserSession.generalize_credentials_error_messages
         session = UserSession.create(:login => users(:ben).login, :password => "invalud-password")
-        assert_equal ["Password is not valid"], session.errors.full_messages
+        assert_equal ["is not valid"], session.errors.full_messages
       end
       
       def test_generalize_credentials_error_messages_set_to_true

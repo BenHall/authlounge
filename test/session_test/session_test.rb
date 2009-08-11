@@ -13,11 +13,16 @@ module SessionTest
     end
     
     class InstanceMethodsTest < ActiveSupport::TestCase
+
+      def setup
+        reset_users
+      end
+
       def test_persist_persist_by_session
         ben = users(:ben)
         set_session_for(ben)
         assert session = UserSession.find
-        assert_equal ben, session.record
+        assert_equal ben.id, session.record.id
         assert_equal ben.persistence_token, controller.session["user_credentials"]
       end
       
@@ -26,7 +31,7 @@ module SessionTest
         set_session_for(ben)
         controller.session["user_credentials_id"] = nil
         assert session = UserSession.find
-        assert_equal ben, session.record
+        assert_equal ben.id, session.record.id
         assert_equal ben.persistence_token, controller.session["user_credentials"]
       end
     

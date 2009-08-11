@@ -1,4 +1,5 @@
 require "active_support"
+require 'couchrest/support/rails'
 
 require File.dirname(__FILE__) + "/authlogic/version"
 require File.dirname(__FILE__) + "/authlogic/i18n"

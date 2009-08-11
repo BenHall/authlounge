@@ -13,7 +13,7 @@ module Authlogic
       #         errors.add(:base, "You must be awesome to log in") unless attempted_record.awesome?
       #       end
       #   end
-      class Errors < ::ActiveRecord::Errors
+      class Errors < CouchRest::Validation::ValidationErrors
         def [](key)
           value = super
           value.is_a?(Array) ? value : [value].compact
@@ -47,7 +47,7 @@ module Authlogic
       #      end
       #  end
       def errors
-        @errors ||= Errors.new(self)
+        @errors ||= Errors.new
       end
       
       # Determines if the information you provided for authentication is valid or not. If there is
