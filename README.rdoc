@@ -3,6 +3,8 @@
 Based on Authlogic is a clean, simple, and unobtrusive ruby authentication solution to use with {couchdb}[http://couchdb.apache.org/].
 == Requirements
 
+Rails 2.3.2
+
 {peterpunk-couchrest}[http://github.com/peterpunk/couchrest/tree/master] it has some improvements like uniqueness validator.
 
 How different is from authlogic?
