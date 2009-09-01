@@ -36,8 +36,8 @@ module Authlogic
             view_by :single_access_token
             
             validates_is_unique :single_access_token, :if => :single_access_token_changed?
-            validate_callback :before, :reset_single_access_token, :if => :reset_single_access_token?
-            after_password_set_callback(:before, :reset_single_access_token, :if => :change_single_access_token_with_password?) if respond_to?(:after_password_set_callback)
+            before_validate :reset_single_access_token, :if => :reset_single_access_token?
+            before_password_set(:reset_single_access_token, :if => :change_single_access_token_with_password?) if respond_to?(:before_password_set)
           end
         end
         

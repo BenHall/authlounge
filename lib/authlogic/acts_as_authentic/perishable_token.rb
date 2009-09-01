@@ -46,7 +46,7 @@ module Authlogic
             include InstanceMethods
             
             validates_is_unique :perishable_token, :if => :perishable_token_changed?
-            save_callback :before, :reset_perishable_token, :unless => :disable_perishable_token_maintenance?
+            before_save :reset_perishable_token, :unless => :disable_perishable_token_maintenance?
             
             view_by :perishable_token_with_timestamp, :map => "function(doc) {
                 if (doc['couchrest-type'] == 'User' && doc['perishable_token']) {

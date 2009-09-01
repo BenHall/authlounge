@@ -174,8 +174,8 @@ module Authlogic
       # Callbacks / hooks to allow other modules to modify the behavior of this module.
       module Callbacks
         METHODS = [
-          :before_password_set, :after_password_set,
-          :before_password_verification, :after_password_verification
+          :password_set,
+          :password_verification
         ]
         
         def self.included(klass)
@@ -204,7 +204,7 @@ module Authlogic
               end
             end
 
-            save_callback :after, :reset_password_changed
+            after_save :reset_password_changed
           end
         end
         
@@ -218,13 +218,13 @@ module Authlogic
           # the password.
           def password=(pass)
             return if ignore_blank_passwords? && pass.blank?
-            _run_before_password_set_callbacks
-            @password = pass
-            send("#{password_salt_field}=", Authlogic::Random.friendly_token) if password_salt_field
-            send("#{crypted_password_field}=", crypto_provider.encrypt(*encrypt_arguments(@password, act_like_restful_authentication? ? :restful_authentication : nil)))
+            _run_password_set_callbacks do
+              @password = pass
+              send("#{password_salt_field}=", Authlogic::Random.friendly_token) if password_salt_field
+              send("#{crypted_password_field}=", crypto_provider.encrypt(*encrypt_arguments(@password, act_like_restful_authentication? ? :restful_authentication : nil)))
             
-            @password_changed = true
-            _run_after_password_set_callbacks 
+              @password_changed = true
+            end
           end
         
           # Accepts a raw password to determine if it is the correct password or not. Notice the second argument. That defaults to the value of
@@ -234,26 +234,28 @@ module Authlogic
             crypted = check_against_database && send("#{crypted_password_field}_changed?") ? changed_properties[crypted_password_field] : send(crypted_password_field)
             return false if attempted_password.blank? || crypted.blank?
             
-            _run_before_password_verification_callbacks
+            result = false
+            _run_password_verification_callbacks do
 
-            crypto_providers.each_with_index do |encryptor, index|
+              crypto_providers.each_with_index do |encryptor, index|
 
-              # The arguments_type of for the transitioning from restful_authentication
-              arguments_type = (act_like_restful_authentication? && index == 0) ||
-                (transition_from_restful_authentication? && index > 0 && encryptor == Authlogic::CryptoProviders::Sha1) ?
-                :restful_authentication : nil
+                # The arguments_type of for the transitioning from restful_authentication
+                arguments_type = (act_like_restful_authentication? && index == 0) ||
+                  (transition_from_restful_authentication? && index > 0 && encryptor == Authlogic::CryptoProviders::Sha1) ?
+                  :restful_authentication : nil
             
-              if encryptor.matches?(crypted, *encrypt_arguments(attempted_password, check_against_database, arguments_type))
-                if transition_password?(index, encryptor, crypted, check_against_database)
-                  transition_password(attempted_password) 
+                if encryptor.matches?(crypted, *encrypt_arguments(attempted_password, check_against_database, arguments_type))
+                  if transition_password?(index, encryptor, crypted, check_against_database)
+                    transition_password(attempted_password) 
+                  end
+                  result = true
+                  break
                 end
-                _run_after_password_verification_callbacks
-                return true
               end
             end
-          
-            false
+            return result
           end
+
         
           # Resets the password to a random friendly token.
           def reset_password

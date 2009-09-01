@@ -1,10 +1,10 @@
-require "test/unit"
 require "rubygems"
+require "test/unit"
 require "ruby-debug"
 require "active_record"
-require "couchrest"
 require "action_controller"
 require "active_record/fixtures"
+require "couchrest"
 
 # A temporary fix to bring active record errors up to speed with rails edge.
 # I need to remove this once the new gem is released. This is only here so my tests pass.
