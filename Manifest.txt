@@ -90,7 +90,6 @@ test/acts_as_authentic_test/persistence_token_test.rb
 test/acts_as_authentic_test/restful_authentication_test.rb
 test/acts_as_authentic_test/session_maintenance_test.rb
 test/acts_as_authentic_test/single_access_test.rb
-test/authenticates_many_test.rb
 test/crypto_provider_test
 test/crypto_provider_test/aes256_test.rb
 test/crypto_provider_test/bcrypt_test.rb
