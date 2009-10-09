@@ -1,5 +1,5 @@
 require "active_support"
-require 'couchrest/support/rails'
+require 'couchrest/support/rails' if defined? Couchrest::Document
 
 require File.dirname(__FILE__) + "/authlogic/version"
 require File.dirname(__FILE__) + "/authlogic/i18n"
