@@ -53,5 +53,5 @@ require File.dirname(__FILE__) + "/authlogic/session/scopes"
 require File.dirname(__FILE__) + "/authlogic/session/session"
 require File.dirname(__FILE__) + "/authlogic/session/timeout"
 require File.dirname(__FILE__) + "/authlogic/session/unauthorized_record"
-require File.dirname(__FILE__) + "/authlogic/session/validation"
+require File.dirname(__FILE__) + "/authlogic/session/validation" if defined? Couchrest::Document
 require File.dirname(__FILE__) + "/authlogic/session/base"
